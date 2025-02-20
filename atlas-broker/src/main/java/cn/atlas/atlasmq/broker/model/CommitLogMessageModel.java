@@ -9,23 +9,23 @@ import cn.atlas.atlasmq.broker.utils.ByteConvertUtil;
  */
 public class CommitLogMessageModel {
 
-    /**
-     * 消息的体积大小，单位是字节
-     */
-    private int size;
+//    /**
+//     * 消息的体积大小，单位是字节
+//     */
+//    private int size;
 
     /**
      * 真正的消息内容
      */
     private byte[] content;
 
-    public int getSize() {
-        return size;
-    }
-
-    public void setSize(int size) {
-        this.size = size;
-    }
+//    public int getSize() {
+//        return size;
+//    }
+//
+//    public void setSize(int size) {
+//        this.size = size;
+//    }
 
     public byte[] getContent() {
         return content;
@@ -36,11 +36,12 @@ public class CommitLogMessageModel {
     }
 
     public byte[] convertToBytes() {
-        byte[] sizeByte = ByteConvertUtil.intToBytes(this.getSize());
-        byte[] content = this.getContent();
-        byte[] mergeResultByte = new byte[sizeByte.length + content.length];
-        System.arraycopy(sizeByte, 0, mergeResultByte, 0, sizeByte.length);
-        System.arraycopy(content, 0, mergeResultByte, sizeByte.length, content.length);
-        return mergeResultByte;
+//        byte[] sizeByte = ByteConvertUtil.intToBytes(this.getSize());
+//        byte[] content = this.getContent();
+//        byte[] mergeResultByte = new byte[sizeByte.length + content.length];
+//        System.arraycopy(sizeByte, 0, mergeResultByte, 0, sizeByte.length);
+//        System.arraycopy(content, 0, mergeResultByte, sizeByte.length, content.length);
+//        return mergeResultByte;
+        return this.getContent();
     }
 }

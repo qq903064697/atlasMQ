@@ -1,0 +1,46 @@
+package cn.atlas.atlasmq.broker.model;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * @Author xiaoxin
+ * @Create 2025/2/19 下午10:50
+ * @Version 1.0
+ */
+public class ConsumerQueueOffsetModel {
+
+    private OffsetTable offsetTable = new OffsetTable();
+
+    public OffsetTable getOffsetTable() {
+        return offsetTable;
+    }
+
+    public void setOffsetTable(OffsetTable offsetTable) {
+        this.offsetTable = offsetTable;
+    }
+
+    public static class OffsetTable{
+        private Map<String, ConsumerGroupDetail> topicConsumerGroupDetail = new HashMap<>();
+
+        public Map<String, ConsumerGroupDetail> getTopicConsumerGroupDetail() {
+            return topicConsumerGroupDetail;
+        }
+
+        public void setTopicConsumerGroupDetail(Map<String, ConsumerGroupDetail> topicConsumerGroupDetail) {
+            this.topicConsumerGroupDetail = topicConsumerGroupDetail;
+        }
+    }
+
+    public static class ConsumerGroupDetail{
+        private Map<String, Map<String, String>> consumerGroupDetailMap = new HashMap<>();
+
+        public Map<String, Map<String, String>> getConsumerGroupDetailMap() {
+            return consumerGroupDetailMap;
+        }
+
+        public void setConsumerGroupDetailMap(Map<String, Map<String, String>> consumerGroupDetailMap) {
+            this.consumerGroupDetailMap = consumerGroupDetailMap;
+        }
+    }
+}

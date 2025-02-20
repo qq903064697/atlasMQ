@@ -11,6 +11,16 @@ public class AtlasMqTopicModel {
     private String topic;
     private CommitLogModel commitLogModel;
     private List<QueueModel> queueList;
+    private Integer queueSize;
+
+    public Integer getQueueSize() {
+        return queueSize;
+    }
+
+    public void setQueueSize(Integer queueSize) {
+        this.queueSize = queueSize;
+    }
+
     private Long createAt;
     private Long updateAt;
 
@@ -61,9 +71,9 @@ public class AtlasMqTopicModel {
                 "topic='" + topic + '\'' +
                 ", commitLogModel=" + commitLogModel +
                 ", queueList=" + queueList +
+                ", queueSize=" + queueSize +
                 ", createAt=" + createAt +
                 ", updateAt=" + updateAt +
                 '}';
     }
-
 }

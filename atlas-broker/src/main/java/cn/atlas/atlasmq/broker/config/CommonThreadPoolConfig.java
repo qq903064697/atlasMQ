@@ -22,4 +22,16 @@ public class CommonThreadPoolConfig {
                 return thread;
             }
     );
+    // 专门用于将各个消费者消费进度刷新到磁盘中
+    public static ThreadPoolExecutor refreshConsumerQueueOffsetExecutor = new ThreadPoolExecutor(
+            1,
+            1,
+            30,
+            TimeUnit.SECONDS,
+            new ArrayBlockingQueue<>(10), r -> {
+        Thread thread = new Thread(r);
+        thread.setName("refresh-consumer-queue-offset-config");
+        return thread;
+    }
+    );
 }

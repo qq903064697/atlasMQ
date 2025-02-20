@@ -2,14 +2,17 @@ package cn.atlas.atlasmq.broker;
 
 import cn.atlas.atlasmq.broker.cache.CommonCache;
 import cn.atlas.atlasmq.broker.config.AtlasMqTopicLoader;
+import cn.atlas.atlasmq.broker.config.ConsumerQueueOffsetLoader;
 import cn.atlas.atlasmq.broker.config.GlobalPropertiesLoader;
-import cn.atlas.atlasmq.broker.constants.BrokerConstants;
 import cn.atlas.atlasmq.broker.core.CommitLogAppendHandler;
+import cn.atlas.atlasmq.broker.core.ConsumerQueueAppendHandler;
+import cn.atlas.atlasmq.broker.core.ConsumerQueueConsumeHandler;
 import cn.atlas.atlasmq.broker.model.AtlasMqTopicModel;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @Author xiaoxin
@@ -20,35 +23,114 @@ public class BrokerStartUp {
     private static GlobalPropertiesLoader globalPropertiesLoader;
     private static AtlasMqTopicLoader atlasMqTopicLoader;
     private static CommitLogAppendHandler commitLogAppendHandler;
+    private static ConsumerQueueOffsetLoader consumerQueueOffsetLoader;
+    private static ConsumerQueueAppendHandler consumerQueueAppendHandler;
+    private static ConsumerQueueConsumeHandler consumerQueueConsumeHandler;
 
     /**
      * 初始化配置逻辑
      */
     private static void initProperties() throws IOException {
         globalPropertiesLoader = new GlobalPropertiesLoader();
-        globalPropertiesLoader.loadProperties();
         atlasMqTopicLoader = new AtlasMqTopicLoader();
+        consumerQueueOffsetLoader = new ConsumerQueueOffsetLoader();
+        consumerQueueConsumeHandler = new ConsumerQueueConsumeHandler();
+        commitLogAppendHandler = new CommitLogAppendHandler();
+        consumerQueueAppendHandler = new ConsumerQueueAppendHandler();
+
+        globalPropertiesLoader.loadProperties();
         atlasMqTopicLoader.loadProperties();
         atlasMqTopicLoader.startRefreshAtlasMqTopicInfoTask();
-        commitLogAppendHandler = new CommitLogAppendHandler();
-//        List<AtlasMqTopicModel> atlasMqTopicModelList = CommonCache.getAtlasMqTopicModelList();
+        consumerQueueOffsetLoader.loadProperties();
+        consumerQueueOffsetLoader.startRefreshConsumerQueueOffsetTask();
+
+
         for (AtlasMqTopicModel atlasMqTopicModel : CommonCache.getAtlasMqTopicModelMap().values()) {
             String topicName = atlasMqTopicModel.getTopic();
             commitLogAppendHandler.prepareMMapLoading(topicName);
+            consumerQueueAppendHandler.prepareConsumerQueueMMapLoading(topicName);
         }
     }
 
-
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws IOException {
         // 加载配置，缓存对象的生成
         initProperties();
 
         // 模拟初始化文件映射
         String topic = "order_cancel_topic";
+        String userServiceConsumerGroup = "user_service_group";
+        String orderServiceConsumerGroup = "order_service_group";
+        new Thread(() -> {
+            while (true) {
+                byte[] content = consumerQueueConsumeHandler.consume(topic, userServiceConsumerGroup, 0);
+                if (content != null && content.length != 0) {
+                    System.out.println(userServiceConsumerGroup + "消费内容:" + new String(content));
+                    consumerQueueConsumeHandler.ack(topic, userServiceConsumerGroup, 0);
+                } else {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        }).start();
+
+        new Thread(() -> {
+            while (true) {
+                byte[] content = consumerQueueConsumeHandler.consume(topic, orderServiceConsumerGroup, 0);
+                if (content != null && content.length != 0) {
+                    System.out.println(orderServiceConsumerGroup + "消费内容:" + new String(content));
+                    consumerQueueConsumeHandler.ack(topic, orderServiceConsumerGroup, 0);
+                } else {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        }).start();
+
+        AtomicInteger i = new AtomicInteger();
+        new Thread(() -> {
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            while (true) {
+                try {
+                    commitLogAppendHandler.appendMessage(topic, ("message_" + (i.getAndIncrement())).getBytes());
+                    TimeUnit.MILLISECONDS.sleep(100);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }).start();
+
+    }
+
+    public static void m1(String[] args) throws IOException, InterruptedException {
+        // 加载配置，缓存对象的生成
+        initProperties();
+
+        // 模拟初始化文件映射
+        String topic = "order_cancel_topic";
+        String consumerGroup = "user_service_group";
         for (int i = 0; i < 50000; i++) {
-            commitLogAppendHandler.appendMessage(topic, ("this is content" + i).getBytes());
-            TimeUnit.MILLISECONDS.sleep(1);
+            byte[] content = consumerQueueConsumeHandler.consume(topic, consumerGroup, 0);
+            System.out.println("消费数据:" + new String(content));
+            consumerQueueConsumeHandler.ack(topic, consumerGroup, 0);
+//            commitLogAppendHandler.appendMessage(topic, ("this is content " + i).getBytes());
+//            consumerQueueAppendHandler.readMsg(topic, i * 12);
+//            commitLogAppendHandler.readMsg(topic);
+            TimeUnit.MILLISECONDS.sleep(100);
+
         }
+
 
 //        commitLogAppendHandler.readMsg(topic);
     }

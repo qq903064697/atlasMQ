@@ -4,7 +4,8 @@ import cn.atlas.atlasmq.broker.cache.CommonCache;
 import cn.atlas.atlasmq.broker.constants.BrokerConstants;
 import cn.atlas.atlasmq.broker.model.AtlasMqTopicModel;
 import cn.atlas.atlasmq.broker.utils.FileContentUtil;
-import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import io.netty.util.internal.StringUtil;
 
 import java.util.List;
@@ -16,7 +17,7 @@ import java.util.concurrent.TimeUnit;
  * @Description: 负责将mq的主题配置加载到内存中
  */
 public class AtlasMqTopicLoader {
-    private AtlasMqTopicModel atlasMqTopicModel;
+//    private AtlasMqTopicModel atlasMqTopicModel;
     private String filePath;
 
     public void loadProperties() {
@@ -46,7 +47,7 @@ public class AtlasMqTopicLoader {
                         TimeUnit.SECONDS.sleep(BrokerConstants.DEFAULT_REFRESH_MQ_TOPIC_TIME_STEP);
                         System.out.println("刷新磁盘");
                         List<AtlasMqTopicModel> atlasMqTopicModelList = CommonCache.getAtlasMqTopicModelList();
-                        FileContentUtil.overWriteToFile(filePath, JSON.toJSONString(atlasMqTopicModelList));
+                        FileContentUtil.overWriteToFile(filePath, JSON.toJSONString(atlasMqTopicModelList, SerializerFeature.PrettyFormat));
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }

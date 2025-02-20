@@ -1,0 +1,20 @@
+{
+	"offsetTable":{
+		"topicConsumerGroupDetail":{
+			"order_cancel_topic":{
+				"consumerGroupDetailMap":{
+					"user_service_group":{
+						"0":"00000000#3780",
+						"1":"00000000#0",
+						"2":"00000000#0"
+					},
+					"order_service_group":{
+						"0":"00000000#3780",
+						"1":"00000000#0",
+						"2":"00000000#0"
+					}
+				}
+			}
+		}
+	}
+}
