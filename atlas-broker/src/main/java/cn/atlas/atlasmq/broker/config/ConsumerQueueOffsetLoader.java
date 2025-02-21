@@ -1,18 +1,14 @@
 package cn.atlas.atlasmq.broker.config;
 
 import cn.atlas.atlasmq.broker.cache.CommonCache;
-import cn.atlas.atlasmq.broker.constants.BrokerConstants;
-import cn.atlas.atlasmq.broker.model.AtlasMqTopicModel;
+import cn.atlas.atlasmq.common.constants.BrokerConstants;
 import cn.atlas.atlasmq.broker.model.ConsumerQueueOffsetModel;
 import cn.atlas.atlasmq.broker.utils.FileContentUtil;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.alibaba.fastjson.JSON;
 import io.netty.util.internal.StringUtil;
 
-import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import static cn.atlas.atlasmq.broker.cache.CommonCache.atlasMqTopicModelList;
 
 /**
  * @Author xiaoxin
@@ -45,7 +41,7 @@ public class ConsumerQueueOffsetLoader {
                 do {
                     try {
                         TimeUnit.SECONDS.sleep(BrokerConstants.DEFAULT_REFRESH_MQ_TOPIC_TIME_STEP);
-                        System.out.println("consumerQueueOffset刷新磁盘");
+//                        System.out.println("consumerQueueOffset刷新磁盘");
                         ConsumerQueueOffsetModel consumerQueueOffsetModel = CommonCache.getConsumerQueueOffsetModel();
                         FileContentUtil.overWriteToFile(filePath, JSON.toJSONString(consumerQueueOffsetModel, SerializerFeature.PrettyFormat));
                     } catch (InterruptedException e) {

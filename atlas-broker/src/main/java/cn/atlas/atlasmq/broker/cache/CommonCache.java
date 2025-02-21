@@ -6,6 +6,8 @@ import cn.atlas.atlasmq.broker.core.ConsumerQueueMMapFileModel;
 import cn.atlas.atlasmq.broker.core.ConsumerQueueMMapFileModelManager;
 import cn.atlas.atlasmq.broker.model.AtlasMqTopicModel;
 import cn.atlas.atlasmq.broker.model.ConsumerQueueOffsetModel;
+import cn.atlas.atlasmq.broker.netty.nameserver.HeartBeatTaskManager;
+import cn.atlas.atlasmq.broker.netty.nameserver.NameServerClient;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,6 +26,24 @@ public class CommonCache {
     private static ConsumerQueueOffsetModel consumerQueueOffsetModel = new ConsumerQueueOffsetModel();
     private static ConsumerQueueMMapFileModelManager consumerQueueMMapFileModelManager = new ConsumerQueueMMapFileModelManager();
     private static CommitLogMMapFileModelManager commitLogMMapFileModelManager = new CommitLogMMapFileModelManager();
+    private static NameServerClient nameServerClient = new NameServerClient();
+    private static HeartBeatTaskManager heartBeatTaskManager = new HeartBeatTaskManager();
+
+    public static HeartBeatTaskManager getHeartBeatTaskManager() {
+        return heartBeatTaskManager;
+    }
+
+    public static void setHeartBeatTaskManager(HeartBeatTaskManager heartBeatTaskManager) {
+        CommonCache.heartBeatTaskManager = heartBeatTaskManager;
+    }
+
+    public static NameServerClient getNameServerClient() {
+        return nameServerClient;
+    }
+
+    public static void setNameServerClient(NameServerClient nameServerClient) {
+        CommonCache.nameServerClient = nameServerClient;
+    }
 
     public static CommitLogMMapFileModelManager getCommitLogMMapFileModelManager() {
         return commitLogMMapFileModelManager;

@@ -1,7 +1,7 @@
 package cn.atlas.atlasmq.broker.config;
 
 import cn.atlas.atlasmq.broker.cache.CommonCache;
-import cn.atlas.atlasmq.broker.constants.BrokerConstants;
+import cn.atlas.atlasmq.common.constants.BrokerConstants;
 import cn.atlas.atlasmq.broker.model.AtlasMqTopicModel;
 import cn.atlas.atlasmq.broker.utils.FileContentUtil;
 import com.alibaba.fastjson.JSON;
@@ -45,7 +45,7 @@ public class AtlasMqTopicLoader {
                 do {
                     try {
                         TimeUnit.SECONDS.sleep(BrokerConstants.DEFAULT_REFRESH_MQ_TOPIC_TIME_STEP);
-                        System.out.println("刷新磁盘");
+//                        System.out.println("刷新磁盘");
                         List<AtlasMqTopicModel> atlasMqTopicModelList = CommonCache.getAtlasMqTopicModelList();
                         FileContentUtil.overWriteToFile(filePath, JSON.toJSONString(atlasMqTopicModelList, SerializerFeature.PrettyFormat));
                     } catch (InterruptedException e) {

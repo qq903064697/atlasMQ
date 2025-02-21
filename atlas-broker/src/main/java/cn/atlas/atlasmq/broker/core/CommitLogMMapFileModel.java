@@ -1,7 +1,7 @@
 package cn.atlas.atlasmq.broker.core;
 
 import cn.atlas.atlasmq.broker.cache.CommonCache;
-import cn.atlas.atlasmq.broker.constants.BrokerConstants;
+import cn.atlas.atlasmq.common.constants.BrokerConstants;
 import cn.atlas.atlasmq.broker.model.*;
 import cn.atlas.atlasmq.broker.utils.*;
 import sun.nio.ch.FileChannelImpl;
