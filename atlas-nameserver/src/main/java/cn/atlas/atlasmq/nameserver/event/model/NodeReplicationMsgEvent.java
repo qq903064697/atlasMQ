@@ -3,12 +3,12 @@ package cn.atlas.atlasmq.nameserver.event.model;
 import cn.atlas.atlasmq.nameserver.store.ServiceInstance;
 
 /**
- * @Author idea
- * @Description 复制消息
+ * @Author xiaoxin
+ * @Create 2025/2/23 下午10:09
+ * @Version 1.0
  */
-public class ReplicationMsgEvent extends Event{
+public class NodeReplicationMsgEvent extends Event{
     private Integer type;
-
     private ServiceInstance serviceInstance;
 
     public Integer getType() {

@@ -1,16 +1,16 @@
 package cn.atlas.atlasmq.nameserver.common;
 
+import cn.atlas.atlasmq.common.dto.NodeAckDTO;
 import cn.atlas.atlasmq.common.dto.SlaveAckDTO;
 import cn.atlas.atlasmq.nameserver.core.PropertiesLoader;
 import cn.atlas.atlasmq.nameserver.replication.ReplicationTask;
-import cn.atlas.atlasmq.nameserver.store.MasterReplicationQueueManager;
+import cn.atlas.atlasmq.nameserver.store.ReplicationMsgQueueManager;
 import cn.atlas.atlasmq.nameserver.store.ReplicationChannelManager;
 import cn.atlas.atlasmq.nameserver.store.ServiceInstanceManager;
 import io.netty.channel.Channel;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @Author xiaoxin
@@ -24,9 +24,29 @@ public class CommonCache {
     private static NameserverProperties nameserverProperties = new NameserverProperties();
     private static ReplicationChannelManager replicationChannelManager = new ReplicationChannelManager();
     private static ReplicationTask replicationTask;
-    private static Channel masterConnection = null;
-    private static MasterReplicationQueueManager masterReplicationQueueManager = new MasterReplicationQueueManager();
+    private static Channel connectNodeChannel = null;
+    private static Channel preNodeChannel = null;
+
+    private static ReplicationMsgQueueManager replicationMsgQueueManager = new ReplicationMsgQueueManager();
+
+    private static Map<String, NodeAckDTO> nodeAckMap = new ConcurrentHashMap<>();
     private static Map<String, SlaveAckDTO> ackMap = new ConcurrentHashMap<>();
+
+    public static Map<String, NodeAckDTO> getNodeAckMap() {
+        return nodeAckMap;
+    }
+
+    public static void setNodeAckMap(Map<String, NodeAckDTO> nodeAckMap) {
+        CommonCache.nodeAckMap = nodeAckMap;
+    }
+
+    public static Channel getPreNodeChannel() {
+        return preNodeChannel;
+    }
+
+    public static void setPreNodeChannel(Channel preNodeChannel) {
+        CommonCache.preNodeChannel = preNodeChannel;
+    }
 
     public static Map<String, SlaveAckDTO> getAckMap() {
         return ackMap;
@@ -36,12 +56,12 @@ public class CommonCache {
         CommonCache.ackMap = ackMap;
     }
 
-    public static MasterReplicationQueueManager getMasterReplicationQueueManager() {
-        return masterReplicationQueueManager;
+    public static ReplicationMsgQueueManager getReplicationMsgQueueManager() {
+        return replicationMsgQueueManager;
     }
 
-    public static void setMasterReplicationQueueManager(MasterReplicationQueueManager masterReplicationQueueManager) {
-        CommonCache.masterReplicationQueueManager = masterReplicationQueueManager;
+    public static void setReplicationMsgQueueManager(ReplicationMsgQueueManager replicationMsgQueueManager) {
+        CommonCache.replicationMsgQueueManager = replicationMsgQueueManager;
     }
 
     public static ReplicationTask getReplicationTask() {
@@ -52,12 +72,12 @@ public class CommonCache {
         CommonCache.replicationTask = replicationTask;
     }
 
-    public static Channel getMasterConnection() {
-        return masterConnection;
+    public static Channel getConnectNodeChannel() {
+        return connectNodeChannel;
     }
 
-    public static void setMasterConnection(Channel masterConnection) {
-        CommonCache.masterConnection = masterConnection;
+    public static void setConnectNodeChannel(Channel connectNodeChannel) {
+        CommonCache.connectNodeChannel = connectNodeChannel;
     }
 
     public static ReplicationChannelManager getReplicationChannelManager() {

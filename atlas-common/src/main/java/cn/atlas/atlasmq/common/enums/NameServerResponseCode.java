@@ -8,7 +8,8 @@ package cn.atlas.atlasmq.common.enums;
 public enum NameServerResponseCode {
     ERROR_USER_OR_PASSWORD(1001, "账号验证异常"),
     UN_REGISTRY_SERVICE(1002, "服务正常下线"),
-    REGISTRY_SUCCESS(1003, "服务正常注册")
+    REGISTRY_SUCCESS(1003, "服务正常注册"),
+    HEART_BEAT_SUCCESS(1004,"心跳ACK"),
     ;
 
     int code;

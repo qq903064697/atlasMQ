@@ -1,14 +1,13 @@
 package cn.atlas.atlasmq.nameserver;
 
 import cn.atlas.atlasmq.nameserver.common.CommonCache;
+import cn.atlas.atlasmq.nameserver.common.TraceReplicationProperties;
 import cn.atlas.atlasmq.nameserver.core.InValidServiceRemoveTask;
 import cn.atlas.atlasmq.nameserver.core.NameServerStarter;
 import cn.atlas.atlasmq.nameserver.enums.ReplicationModeEnum;
 import cn.atlas.atlasmq.nameserver.enums.ReplicationRoleEnum;
-import cn.atlas.atlasmq.nameserver.replication.MasterReplicationMsgSendTask;
-import cn.atlas.atlasmq.nameserver.replication.ReplicationService;
-import cn.atlas.atlasmq.nameserver.replication.ReplicationTask;
-import cn.atlas.atlasmq.nameserver.replication.SlaveReplicationHeartBeatTask;
+import cn.atlas.atlasmq.nameserver.replication.*;
+import io.netty.util.internal.StringUtil;
 
 import java.io.IOException;
 
@@ -23,12 +22,12 @@ public class NameServerStartUp {
     private static void initReplication() {
         // 复制逻辑的初始化
         ReplicationModeEnum replicationModeEnum = replicationService.checkProperties();
-        // 这里面会根据角色开启不同的netty进程
+        // 这里面会根据同步模式开启不同的netty进程
         replicationService.startReplicationTask(replicationModeEnum);
         //开启定时任务
+        ReplicationTask replicationTask = null;
         if(replicationModeEnum == ReplicationModeEnum.MASTER_SLAVE) {
             ReplicationRoleEnum roleEnum = ReplicationRoleEnum.of(CommonCache.getNameserverProperties().getMasterSlaveReplicationProperties().getRole());
-            ReplicationTask replicationTask = null;
             if(roleEnum == ReplicationRoleEnum.MASTER) {
                 replicationTask = new MasterReplicationMsgSendTask("master-replication-msg-send-task");
                 replicationTask.startTaskAsync();
@@ -38,8 +37,15 @@ public class NameServerStartUp {
                 replicationTask = new SlaveReplicationHeartBeatTask("slave-replication-heart-beat-send-task");
                 replicationTask.startTaskAsync();
             }
-            CommonCache.setReplicationTask(replicationTask);
+        } else if (replicationModeEnum == ReplicationModeEnum.TRACE) {
+            // 判断当前节点是否为尾节点，如果不是就开启一个复制数据的一步任务
+            TraceReplicationProperties traceReplicationProperties = CommonCache.getNameserverProperties().getTraceReplicationProperties();
+            if (!StringUtil.isNullOrEmpty(traceReplicationProperties.getNextNode())) {
+                replicationTask = new NodeReplicationSendMsgTask("node-replication-msg-send-task");
+                replicationTask.startTaskAsync();
+            }
         }
+        CommonCache.setReplicationTask(replicationTask);
     }
 
     private static void initInvalidServerRemoveTask() {
@@ -56,8 +62,7 @@ public class NameServerStartUp {
         // 如果是主从复制-》slave角色-》开启一个额外的netty进程-》slave端去链接master节点
         initReplication();
         initInvalidServerRemoveTask();
-        new Thread(new InValidServiceRemoveTask()).start();
-        nameServerStarter = new NameServerStarter(9090);
+        nameServerStarter = new NameServerStarter(CommonCache.getNameserverProperties().getNameserverPort());
         // 阻塞
         nameServerStarter.startServer();
     }

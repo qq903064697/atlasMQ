@@ -8,8 +8,8 @@ public enum ReplicationRoleEnum {
 
     MASTER("master", "主从-主"),
     SLAVE("slave", "主从-从"),
-    HEADER("header","链路复制-头节点"),
-    NODE("node","链路复制-非头节点"),
+    NODE("node","链路复制-非尾部节点"),
+    TAIL_NODE("tail_node","链路复制-尾部节点"),
     ;
     String code;
     String desc;

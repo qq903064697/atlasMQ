@@ -43,7 +43,7 @@ public class MasterReplicationMsgSendTask extends ReplicationTask {
 
         while (true) {
             try {
-                ReplicationMsgEvent replicationMsgEvent = CommonCache.getMasterReplicationQueueManager().getReplicationMsgQueue().take();
+                ReplicationMsgEvent replicationMsgEvent = CommonCache.getReplicationMsgQueueManager().getReplicationMsgQueue().take();
                 replicationMsgEvent.setMsgId(UUID.randomUUID().toString());
                 Channel brokerChannel = replicationMsgEvent.getChannelHandlerContext().channel();
                 //判断当前采用的同步模式是哪种方式：同步、异步、半同步

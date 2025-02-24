@@ -5,4 +5,5 @@ cn.atlas.atlasmq.nameserver.event.spi.listener.StartReplicationListener
 cn.atlas.atlasmq.nameserver.event.spi.listener.SlaveReplicationMsgListener
 cn.atlas.atlasmq.nameserver.event.spi.listener.SlaveHeartBeatEventListener
 cn.atlas.atlasmq.nameserver.event.spi.listener.SlaveReplicationMsgAckEventListener
-
+cn.atlas.atlasmq.nameserver.event.spi.listener.NodeReplicationMsgEventListener
+cn.atlas.atlasmq.nameserver.event.spi.listener.NodeReplicationAckMsgEventListener

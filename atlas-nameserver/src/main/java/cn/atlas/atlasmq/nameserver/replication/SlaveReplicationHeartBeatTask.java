@@ -36,13 +36,13 @@ public class SlaveReplicationHeartBeatTask extends ReplicationTask {
         startReplicationEvent.setUser(CommonCache.getNameserverProperties().getNameserverUser());
         startReplicationEvent.setPassword(CommonCache.getNameserverProperties().getNameserverPwd());
         TcpMsg startReplicationMsg = new TcpMsg(NameServerEventCode.START_REPLICATION.getCode(), JSON.toJSONBytes(startReplicationEvent));
-        CommonCache.getMasterConnection().writeAndFlush(startReplicationMsg);
+        CommonCache.getConnectNodeChannel().writeAndFlush(startReplicationMsg);
 
         while (true) {
             try {
                 TimeUnit.SECONDS.sleep(3);
                 //发送数据给到主节点
-                Channel channel = CommonCache.getMasterConnection();
+                Channel channel = CommonCache.getConnectNodeChannel();
                 TcpMsg tcpMsg = new TcpMsg(NameServerEventCode.SLAVE_HEART_BEAT.getCode(), JSON.toJSONBytes(new SlaveHeartBeatEvent()));
                 channel.writeAndFlush(tcpMsg);
                 System.out.println("从节点发送心跳数据给master");

@@ -4,6 +4,7 @@ import cn.atlas.atlasmq.common.coder.TcpMsg;
 import cn.atlas.atlasmq.common.constants.BrokerConstants;
 import cn.atlas.atlasmq.common.enums.NameServerResponseCode;
 import cn.atlas.atlasmq.nameserver.common.CommonCache;
+import cn.atlas.atlasmq.nameserver.enums.ReplicationMsgTypeEnum;
 import cn.atlas.atlasmq.nameserver.event.model.RegistryEvent;
 import cn.atlas.atlasmq.nameserver.event.model.ReplicationMsgEvent;
 import cn.atlas.atlasmq.nameserver.store.ServiceInstance;
@@ -44,8 +45,10 @@ public class RegistryListener implements Listener<RegistryEvent> {
         // 如果当前是主从复制模式，当前角色是主节点，那么就往队列里面放元素
         ReplicationMsgEvent replicationMsgEvent = new ReplicationMsgEvent();
         replicationMsgEvent.setServiceInstance(serviceInstance);
+        replicationMsgEvent.setMsgId(UUID.randomUUID().toString());
         replicationMsgEvent.setChannelHandlerContext(event.getChannelHandlerContext());
-        CommonCache.getMasterReplicationQueueManager().put(replicationMsgEvent);
+        replicationMsgEvent.setType(ReplicationMsgTypeEnum.REGISTRY.getCode());
+        CommonCache.getReplicationMsgQueueManager().put(replicationMsgEvent);
         TcpMsg tcpMsg = new TcpMsg(NameServerResponseCode.REGISTRY_SUCCESS.getCode(), NameServerResponseCode.REGISTRY_SUCCESS.getDesc().getBytes());
         channelHandlerContext.writeAndFlush(tcpMsg);
         //同步给到从节点，比较严谨的同步，binlog类型，对于数据的顺序性要求很高

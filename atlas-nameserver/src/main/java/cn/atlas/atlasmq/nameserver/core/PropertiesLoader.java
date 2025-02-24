@@ -27,6 +27,7 @@ public class PropertiesLoader {
         nameserverProperties.setReplicationMode(getStr("nameserver.replication.mode"));
         TraceReplicationProperties traceReplicationProperties = new TraceReplicationProperties();
         traceReplicationProperties.setNextNode(getStrCanBeNull("nameserver.replication.next.node"));
+        traceReplicationProperties.setPort(getInt("nameserver.replication.trace.port"));
         nameserverProperties.setTraceReplicationProperties(traceReplicationProperties);
         MasterSlaveReplicationProperties masterSlaveReplicationProperties = new MasterSlaveReplicationProperties();
         masterSlaveReplicationProperties.setMaster(getStrCanBeNull("nameserver.replication.master"));
@@ -52,6 +53,15 @@ public class PropertiesLoader {
             throw new RuntimeException("配置参数：" + key + "不存在");
         }
         return value;
+    }
+
+
+    private Integer getIntCanBeNull(String key) {
+        String value = properties.getProperty(key);
+        if (value == null) {
+            return null;
+        }
+        return Integer.valueOf(value);
     }
 
     private Integer getInt(String key) {

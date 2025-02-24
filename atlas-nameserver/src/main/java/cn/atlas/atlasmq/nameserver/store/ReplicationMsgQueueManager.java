@@ -1,6 +1,7 @@
 package cn.atlas.atlasmq.nameserver.store;
 
 import cn.atlas.atlasmq.nameserver.common.CommonCache;
+import cn.atlas.atlasmq.nameserver.common.TraceReplicationProperties;
 import cn.atlas.atlasmq.nameserver.enums.ReplicationModeEnum;
 import cn.atlas.atlasmq.nameserver.enums.ReplicationRoleEnum;
 import cn.atlas.atlasmq.nameserver.event.model.ReplicationMsgEvent;
@@ -13,7 +14,7 @@ import java.util.concurrent.BlockingQueue;
  * @Create 2025/2/21 下午10:07
  * @Version 1.0
  */
-public class MasterReplicationQueueManager {
+public class ReplicationMsgQueueManager {
     private BlockingQueue<ReplicationMsgEvent> replicationMsgQueue = new ArrayBlockingQueue(5000);
 
     public BlockingQueue<ReplicationMsgEvent> getReplicationMsgQueue() {
@@ -31,11 +32,22 @@ public class MasterReplicationQueueManager {
             if (roleEnum != ReplicationRoleEnum.MASTER) {
                 return;
             }
-            try {
-                replicationMsgQueue.put(replicationMsgEvent);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+            this.sendMsgToQueue(replicationMsgEvent);
+        } else if (replicationModeEnum == ReplicationModeEnum.TRACE) {
+            TraceReplicationProperties traceReplicationProperties = CommonCache.getNameserverProperties().getTraceReplicationProperties();
+            if (traceReplicationProperties.getNextNode() != null) {
+                this.sendMsgToQueue(replicationMsgEvent);
             }
+        }
+
+
+    }
+
+    private void sendMsgToQueue(ReplicationMsgEvent replicationMsgEvent) {
+        try {
+            replicationMsgQueue.put(replicationMsgEvent);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 }

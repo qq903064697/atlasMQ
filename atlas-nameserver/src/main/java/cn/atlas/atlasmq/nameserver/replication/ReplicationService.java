@@ -1,6 +1,9 @@
 package cn.atlas.atlasmq.nameserver.replication;
 
+import cn.atlas.atlasmq.nameserver.common.TraceReplicationProperties;
 import cn.atlas.atlasmq.nameserver.enums.ReplicationRoleEnum;
+import cn.atlas.atlasmq.nameserver.handler.NodeSendReplicationMsgServerHandler;
+import cn.atlas.atlasmq.nameserver.handler.NodeWriteMsgReplicationServerHandler;
 import cn.atlas.atlasmq.nameserver.handler.SlaveReplicationServerHandler;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
@@ -39,6 +42,9 @@ public class ReplicationService {
         AssertUtils.isNotNull(replicationModeEnum, "复制模式参数异常");
         if (replicationModeEnum == ReplicationModeEnum.TRACE) {
             //链路复制
+            TraceReplicationProperties traceReplicationProperties = nameserverProperties.getTraceReplicationProperties();
+            AssertUtils.isNotNull(traceReplicationProperties.getPort(), "node节点的端口不能为空");
+
         } else {
             //主从复制
             MasterSlaveReplicationProperties masterSlaveReplicationProperties = nameserverProperties.getMasterSlaveReplicationProperties();
@@ -60,23 +66,39 @@ public class ReplicationService {
         NameserverProperties nameserverProperties = CommonCache.getNameserverProperties();
         if (replicationModeEnum == ReplicationModeEnum.MASTER_SLAVE) {
             port = nameserverProperties.getMasterSlaveReplicationProperties().getPort();
+        } else {
+            replicationModeEnum = ReplicationModeEnum.TRACE;
         }
-        ReplicationRoleEnum roleEnum = ReplicationRoleEnum.of(nameserverProperties.getMasterSlaveReplicationProperties().getRole());
+        ReplicationRoleEnum roleEnum;
+        if (replicationModeEnum == ReplicationModeEnum.MASTER_SLAVE) {
+            roleEnum = ReplicationRoleEnum.of(nameserverProperties.getMasterSlaveReplicationProperties().getRole());
+        } else {
+            String nextNode = nameserverProperties.getTraceReplicationProperties().getNextNode();
+            if (StringUtil.isNullOrEmpty(nextNode)) {
+                roleEnum = ReplicationRoleEnum.TAIL_NODE;
+            } else {
+                roleEnum = ReplicationRoleEnum.NODE;
+            }
+            port = nameserverProperties.getTraceReplicationProperties().getPort();
+        }
+
         int replicationPort = port;
 
-        Thread replicationTask = new Thread(() -> {
-            //master角色，开启netty进程同步数据给master
-            if (roleEnum == ReplicationRoleEnum.MASTER) {
-                startMasterServer(new MasterReplicationServerHandler(new EventBus("master-replication-task-")), replicationPort);
-            } else if (roleEnum == ReplicationRoleEnum.SLAVE) {
-                //slave角色，主动连接master角色
-                String masterAddress = nameserverProperties.getMasterSlaveReplicationProperties().getMaster();
-                startMasterConn(new SlaveReplicationServerHandler(new EventBus("slave-replication-task-")), masterAddress);
-            }
-        });
 
-        replicationTask.setName("replication-task");
-        replicationTask.start();
+        //master角色，开启netty进程同步数据给master
+        if (roleEnum == ReplicationRoleEnum.MASTER) {
+            startNettyServerAsync(new MasterReplicationServerHandler(new EventBus("master-replication-task-")), replicationPort);
+        } else if (roleEnum == ReplicationRoleEnum.SLAVE) {
+            //slave角色，主动连接master角色
+            String masterAddress = nameserverProperties.getMasterSlaveReplicationProperties().getMaster();
+            startNettyConnAsync(new SlaveReplicationServerHandler(new EventBus("slave-replication-task-")), masterAddress);
+        } else if (roleEnum == ReplicationRoleEnum.NODE) {
+            String nextNodeAddress = nameserverProperties.getTraceReplicationProperties().getNextNode();
+            startNettyServerAsync(new NodeWriteMsgReplicationServerHandler(new EventBus("node-write-msg-replication-task-")), replicationPort);
+            startNettyConnAsync(new NodeSendReplicationMsgServerHandler(new EventBus("node-send-replication-msg-task-")), nextNodeAddress);
+        } else if (roleEnum == ReplicationRoleEnum.TAIL_NODE) {
+            startNettyServerAsync(new NodeWriteMsgReplicationServerHandler(new EventBus("node-write-msg-replication-task-")), replicationPort);
+        }
     }
 
     /**
@@ -85,36 +107,43 @@ public class ReplicationService {
      * @param simpleChannelInboundHandler
      * @param address
      */
-    private void startMasterConn(SimpleChannelInboundHandler simpleChannelInboundHandler, String address) {
-        EventLoopGroup clientGroup = new NioEventLoopGroup();
-        Bootstrap bootstrap = new Bootstrap();
-        Channel channel;
-        bootstrap.group(clientGroup);
-        bootstrap.channel(NioSocketChannel.class);
-        bootstrap.handler(new ChannelInitializer<SocketChannel>() {
+    private void startNettyConnAsync(SimpleChannelInboundHandler simpleChannelInboundHandler, String address) {
+        Thread nettyConnTask = new Thread(new Runnable() {
             @Override
-            protected void initChannel(SocketChannel ch) throws Exception {
-                ch.pipeline().addLast(new TcpMsgDecoder());
-                ch.pipeline().addLast(new TcpMsgEncoder());
-                ch.pipeline().addLast(simpleChannelInboundHandler);
+            public void run() {
+                EventLoopGroup clientGroup = new NioEventLoopGroup();
+                Bootstrap bootstrap = new Bootstrap();
+                Channel channel;
+                bootstrap.group(clientGroup);
+                bootstrap.channel(NioSocketChannel.class);
+                bootstrap.handler(new ChannelInitializer<SocketChannel>() {
+                    @Override
+                    protected void initChannel(SocketChannel ch) throws Exception {
+                        ch.pipeline().addLast(new TcpMsgDecoder());
+                        ch.pipeline().addLast(new TcpMsgEncoder());
+                        ch.pipeline().addLast(simpleChannelInboundHandler);
+                    }
+                });
+                ChannelFuture channelFuture = null;
+                try {
+                    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                        clientGroup.shutdownGracefully();
+                        System.out.println("nameserver's replication connect application is closed");
+                    }));
+                    String[] addr = address.split(":");
+                    channelFuture = bootstrap.connect(addr[0], Integer.parseInt(addr[1])).sync();
+                    //连接了master节点的channel对象，建议保存
+                    channel = channelFuture.channel();
+                    System.out.println("success connected to nameserver replication!");
+                    CommonCache.setConnectNodeChannel(channel);
+                    channel.closeFuture().sync();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
         });
-        ChannelFuture channelFuture = null;
-        try {
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                clientGroup.shutdownGracefully();
-                System.out.println("nameserver's replication connect application is closed");
-            }));
-            String[] addr = address.split(":");
-            channelFuture = bootstrap.connect(addr[0], Integer.parseInt(addr[1])).sync();
-            //连接了master节点的channel对象，建议保存
-            channel = channelFuture.channel();
-            System.out.println("success connected to nameserver replication!");
-            CommonCache.setMasterConnection(channel);
-            channel.closeFuture().sync();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        nettyConnTask.start();
+
     }
 
     /**
@@ -123,40 +152,47 @@ public class ReplicationService {
      * @param simpleChannelInboundHandler
      * @param port
      */
-    private void startMasterServer(SimpleChannelInboundHandler simpleChannelInboundHandler, int port) {
-        //负责netty启动
-        NioEventLoopGroup bossGroup = new NioEventLoopGroup();
-        //处理网络io中的read&write事件
-        NioEventLoopGroup workerGroup = new NioEventLoopGroup();
-        ServerBootstrap bootstrap = new ServerBootstrap();
-        bootstrap.group(bossGroup, workerGroup);
-        bootstrap.channel(NioServerSocketChannel.class);
-        bootstrap.childHandler(new ChannelInitializer<Channel>() {
+    private void startNettyServerAsync(SimpleChannelInboundHandler simpleChannelInboundHandler, int port) {
+        Thread nettyServerTask = new Thread(new Runnable() {
             @Override
-            protected void initChannel(Channel ch) throws Exception {
-                ch.pipeline().addLast(new TcpMsgDecoder());
-                ch.pipeline().addLast(new TcpMsgEncoder());
-                ch.pipeline().addLast(simpleChannelInboundHandler);
+            public void run() {
+                //负责netty启动
+                NioEventLoopGroup bossGroup = new NioEventLoopGroup();
+                //处理网络io中的read&write事件
+                NioEventLoopGroup workerGroup = new NioEventLoopGroup();
+                ServerBootstrap bootstrap = new ServerBootstrap();
+                bootstrap.group(bossGroup, workerGroup);
+                bootstrap.channel(NioServerSocketChannel.class);
+                bootstrap.childHandler(new ChannelInitializer<Channel>() {
+                    @Override
+                    protected void initChannel(Channel ch) throws Exception {
+                        ch.pipeline().addLast(new TcpMsgDecoder());
+                        ch.pipeline().addLast(new TcpMsgEncoder());
+                        ch.pipeline().addLast(simpleChannelInboundHandler);
+                    }
+                });
+                Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                    bossGroup.shutdownGracefully();
+                    workerGroup.shutdownGracefully();
+                    System.out.println("nameserver's replication application is closed");
+                }));
+                ChannelFuture channelFuture = null;
+                try {
+                    //master-slave架构
+                    //写入数据的节点，这里就会开启一个服务
+                    //非写入数据的节点，这里就需要链接一个服务
+                    //trace架构
+                    //又要接收外界数据，又要复制数据给外界
+                    channelFuture = bootstrap.bind(port).sync();
+                    System.out.println("start nameserver's replication application on port:" + port);
+                    //阻塞代码
+                    channelFuture.channel().closeFuture().sync();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
             }
         });
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            bossGroup.shutdownGracefully();
-            workerGroup.shutdownGracefully();
-            System.out.println("nameserver's replication application is closed");
-        }));
-        ChannelFuture channelFuture = null;
-        try {
-            //master-slave架构
-            //写入数据的节点，这里就会开启一个服务
-            //非写入数据的节点，这里就需要链接一个服务
-            //trace架构
-            //又要接收外界数据，又要复制数据给外界
-            channelFuture = bootstrap.bind(port).sync();
-            System.out.println("start nameserver's replication application on port:" + port);
-            //阻塞代码
-            channelFuture.channel().closeFuture().sync();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        nettyServerTask.start();
+
     }
 }
