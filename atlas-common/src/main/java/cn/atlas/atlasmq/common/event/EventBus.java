@@ -1,7 +1,7 @@
-package cn.atlas.atlasmq.nameserver.event;
+package cn.atlas.atlasmq.common.event;
 
-import cn.atlas.atlasmq.nameserver.event.spi.listener.Listener;
-import cn.atlas.atlasmq.nameserver.event.model.Event;
+
+import cn.atlas.atlasmq.common.event.model.Event;
 import com.google.common.collect.Lists;
 import org.apache.commons.collections4.CollectionUtils;
 import cn.atlas.atlasmq.common.utils.ReflectUtils;

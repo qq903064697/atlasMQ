@@ -3,18 +3,17 @@ package cn.atlas.atlasmq.nameserver.event.spi.listener;
 
 import cn.atlas.atlasmq.common.coder.TcpMsg;
 import cn.atlas.atlasmq.common.enums.NameServerResponseCode;
+import cn.atlas.atlasmq.common.event.Listener;
 import cn.atlas.atlasmq.nameserver.common.CommonCache;
 import cn.atlas.atlasmq.nameserver.event.model.UnRegistryEvent;
-import cn.atlas.atlasmq.nameserver.store.ServiceInstance;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.AttributeKey;
-import io.netty.util.internal.StringUtil;
 
 /**
  * @Author xiaoxin
  * @Description
  */
-public class UnRegistryListener implements Listener<UnRegistryEvent>{
+public class UnRegistryListener implements Listener<UnRegistryEvent> {
 
     @Override
     public void onReceive(UnRegistryEvent event) throws IllegalAccessException {

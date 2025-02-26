@@ -24,7 +24,7 @@ public class PropertiesLoader {
         nameserverProperties.setNameserverPwd(getStr("nameserver.password"));
         nameserverProperties.setNameserverUser(getStr("nameserver.user"));
         nameserverProperties.setNameserverPort(getInt("nameserver.port"));
-        nameserverProperties.setReplicationMode(getStr("nameserver.replication.mode"));
+        nameserverProperties.setReplicationMode(getStrCanBeNull("nameserver.replication.mode"));
         TraceReplicationProperties traceReplicationProperties = new TraceReplicationProperties();
         traceReplicationProperties.setNextNode(getStrCanBeNull("nameserver.replication.next.node"));
         traceReplicationProperties.setPort(getInt("nameserver.replication.trace.port"));

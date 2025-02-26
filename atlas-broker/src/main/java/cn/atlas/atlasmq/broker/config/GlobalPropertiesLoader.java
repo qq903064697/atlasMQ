@@ -32,6 +32,7 @@ public class GlobalPropertiesLoader {
             globalProperties.setNameserverUser(properties.getProperty("nameserver.user"));
             globalProperties.setNameserverPassword(properties.getProperty("nameserver.password"));
             globalProperties.setBrokerPort(Integer.valueOf(properties.getProperty("broker.port")));
+            globalProperties.setReBalanceStrategy(properties.getProperty("rebalance.strategy"));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

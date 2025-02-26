@@ -15,6 +15,7 @@ public enum NameServerEventCode {
     SLAVE_REPLICATION_ACK_MSG(8,"从节点接收同步数据成功"),
     NODE_REPLICATION_MSG(9,"节点复制数据"),
     NODE_REPLICATION_ACK_MSG(10,"链式复制中数据同步成功信号"),
+    PULL_BROKER_IP_LIST(11,"拉取broker的主节点ip地址"),
     ;
 
     int code;

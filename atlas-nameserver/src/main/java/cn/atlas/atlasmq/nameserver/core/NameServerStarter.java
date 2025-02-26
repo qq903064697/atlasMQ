@@ -2,7 +2,7 @@ package cn.atlas.atlasmq.nameserver.core;
 
 import cn.atlas.atlasmq.common.coder.TcpMsgDecoder;
 import cn.atlas.atlasmq.common.coder.TcpMsgEncoder;
-import cn.atlas.atlasmq.nameserver.event.EventBus;
+import cn.atlas.atlasmq.common.event.EventBus;
 import cn.atlas.atlasmq.nameserver.handler.TcpNettyServerHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -10,6 +10,8 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @Author xiaoxin
@@ -17,6 +19,8 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
  * @Description: 基于netty启动nameserver服务
  */
 public class NameServerStarter {
+    private final Logger logger = LoggerFactory.getLogger(NameServerStarter.class);
+
     private int port;
 
     public NameServerStarter(int port) {
@@ -51,11 +55,11 @@ public class NameServerStarter {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
-            System.out.println("nameserver is closed");
+            logger.info("nameserver is closed");
         }));
 
         ChannelFuture channelFuture = bootstrap.bind(port).sync();
-        System.out.println("start nameserver application on port: " + port);
+        logger.info("start nameserver application on port:" + port);
         // 阻塞代码
         channelFuture.channel().closeFuture().sync();
     }

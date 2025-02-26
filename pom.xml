@@ -12,6 +12,7 @@
         <module>atlas-broker</module>
         <module>atlas-common</module>
         <module>atlas-nameserver</module>
+        <module>atlas-client</module>
     </modules>
 
     <properties>
@@ -22,6 +23,7 @@
         <fastJson.version>2.0.10</fastJson.version>
         <guava.version>21.0</guava.version>
         <commons-collections4.version>4.1</commons-collections4.version>
+        <slf4j.version>1.7.32</slf4j.version>
     </properties>
 
     <dependencies>
@@ -34,6 +36,16 @@
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
             <version>${fastJson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${slf4j.version}</version>
         </dependency>
     </dependencies>
 

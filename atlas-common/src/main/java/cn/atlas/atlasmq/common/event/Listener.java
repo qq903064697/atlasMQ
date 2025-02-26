@@ -1,7 +1,7 @@
-package cn.atlas.atlasmq.nameserver.event.spi.listener;
+package cn.atlas.atlasmq.common.event;
 
 
-import cn.atlas.atlasmq.nameserver.event.model.Event;
+import cn.atlas.atlasmq.common.event.model.Event;
 
 /**
  * @Author xiaoxin

@@ -36,14 +36,4 @@ public class ConsumerQueueAppendHandler {
         CommonCache.getConsumerQueueMMapFileModelManager().put(topicName, consumerQueueMMapFileModels);
     }
 
-    public void readMsg(String topic, Integer index) {
-        ConsumerQueueMMapFileModel consumerQueueMMapFileModel = CommonCache.getConsumerQueueMMapFileModelManager().get(topic).get(0);
-        if (consumerQueueMMapFileModel == null) {
-            throw new RuntimeException("topic is invalid");
-        }
-        byte[] content = consumerQueueMMapFileModel.readContent(index, 12);
-        System.out.println(Arrays.toString(content));
-
-
-    }
 }

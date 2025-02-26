@@ -4,6 +4,10 @@ import cn.atlas.atlasmq.broker.cache.CommonCache;
 import cn.atlas.atlasmq.common.constants.BrokerConstants;
 import cn.atlas.atlasmq.broker.model.*;
 import cn.atlas.atlasmq.broker.utils.*;
+import cn.atlas.atlasmq.common.dto.MessageDTO;
+import cn.atlas.atlasmq.nameserver.event.spi.listener.HeartBeatListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import sun.nio.ch.FileChannelImpl;
 
 import java.io.File;
@@ -18,6 +22,7 @@ import java.nio.channels.FileChannel;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -26,6 +31,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @Description: 最基础的mmap对象模型
  */
 public class CommitLogMMapFileModel {
+
+    private static final Logger logger = LoggerFactory.getLogger(HeartBeatListener.class);
+
     private File file;
     private MappedByteBuffer mappedByteBuffer;
     private ByteBuffer readByteBuffer;
@@ -107,7 +115,7 @@ public class CommitLogMMapFileModel {
         try {
             // 创建新的commitLog文件
             newCommitLogFile.createNewFile();
-            System.out.println("创建了新的commitLog文件");
+            logger.info("创建了新的commitLog文件");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -132,21 +140,21 @@ public class CommitLogMMapFileModel {
     /**
      * 写入数据到磁盘中，默认方法
      *
-     * @param commitLogMessageModel
+     * @param messageDTO
      */
-    public void writeContent(CommitLogMessageModel commitLogMessageModel) throws IOException {
+    public void writeContent(MessageDTO messageDTO) throws IOException {
         // 默认写入到page cache中
         // 如果需要强制刷盘，这里要兼容
-        this.writeContent(commitLogMessageModel, false);
+        this.writeContent(messageDTO, false);
     }
 
     /**
      * 写入数据到磁盘中，支持刷盘
      *
-     * @param commitLogMessageModel
+     * @param messageDTO
      * @param force
      */
-    public void writeContent(CommitLogMessageModel commitLogMessageModel, boolean force) throws IOException {
+    public void writeContent(MessageDTO messageDTO, boolean force) throws IOException {
         // 定位到最新的commitLog文件中，记录下当前文件是否已经写满，如果已经写满，则创建一个新的文件，并且做新的mmap映射
         // 如果当前文件没有写满，对content内容做一层封装 done
         // 再判断写入是否会导致commitLog写满，如果不会，则选择当前commitLog，否则创建一个新的文件，并且做新的mmap映射 done
@@ -168,11 +176,13 @@ public class CommitLogMMapFileModel {
             throw new IllegalArgumentException("commitLogModel is null! topicName is " + topic);
         }
         putMessageLock.lock();
+        CommitLogMessageModel commitLogMessageModel = new CommitLogMessageModel();
+        commitLogMessageModel.setContent(messageDTO.getBody());
         this.checkCommitLogHasEnableSpace(commitLogMessageModel);
         byte[] writeContent = commitLogMessageModel.convertToBytes();
         mappedByteBuffer.put(writeContent);
         AtomicInteger currentLatestMsgOffset = commitLogModel.getOffset();
-        this.dispatcher(writeContent, currentLatestMsgOffset.get());
+        this.dispatcher(messageDTO, currentLatestMsgOffset.get());
         currentLatestMsgOffset.addAndGet(writeContent.length);
         if (force) {
             // 强制刷盘
@@ -184,20 +194,25 @@ public class CommitLogMMapFileModel {
 
     /**
      * 将ConsumerQueue文件写入
-     * @param writeContent
+     * @param messageDTO
      */
-    private void dispatcher(byte[] writeContent, int msgIndex) {
+    private void dispatcher(MessageDTO messageDTO, int msgIndex) {
         AtlasMqTopicModel atlasMqTopicModel = CommonCache.getAtlasMqTopicModelMap().get(topic);
         if (atlasMqTopicModel == null) {
             throw new RuntimeException("topic is undefined");
         }
-        // todo
-        int queueId = 0;
-
+        int queueId;
+        if(messageDTO.getQueueId() >=0) {
+            queueId = messageDTO.getQueueId();
+        } else {
+            //todo 后续可以在这里自由扩展不同的消息分派策略
+            int queueSize = atlasMqTopicModel.getQueueList().size();
+            queueId = new Random().nextInt(queueSize);
+        }
         ConsumerQueueDetailModel consumerQueueDetailModel = new ConsumerQueueDetailModel();
         consumerQueueDetailModel.setCommitLogFileName(Integer.parseInt(atlasMqTopicModel.getCommitLogModel().getFileName()));
         consumerQueueDetailModel.setMsgIndex(msgIndex);
-        consumerQueueDetailModel.setMsgLength(writeContent.length);
+        consumerQueueDetailModel.setMsgLength(messageDTO.getBody().length);
 //        System.out.println("写入consumerQueue内容：" + JSON.toJSONString(consumerQueueDetailModel));
         byte[] content = consumerQueueDetailModel.convertToBytes();
         consumerQueueDetailModel.buildFromBytes(content);

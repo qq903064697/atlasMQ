@@ -2,9 +2,12 @@ package cn.atlas.atlasmq.broker.netty.nameserver;
 
 import cn.atlas.atlasmq.broker.cache.CommonCache;
 import cn.atlas.atlasmq.common.coder.TcpMsg;
+import cn.atlas.atlasmq.common.dto.HeartBeatDTO;
 import cn.atlas.atlasmq.common.enums.NameServerEventCode;
+import com.alibaba.fastjson.JSON;
 import io.netty.channel.Channel;
 
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -35,7 +38,9 @@ public class HeartBeatTaskManager {
                     TimeUnit.SECONDS.sleep(3);
                     //心跳包不需要额外透传过多的参数，只需要告诉nameserver这个channel依然存活即可
                     Channel channel = CommonCache.getNameServerClient().getChannel();
-                    TcpMsg tcpMsg = new TcpMsg(NameServerEventCode.HEART_BEAT.getCode(),new byte[]{});
+                    HeartBeatDTO heartBeatDTO = new HeartBeatDTO();
+                    heartBeatDTO.setMsgId(UUID.randomUUID().toString());
+                    TcpMsg tcpMsg = new TcpMsg(NameServerEventCode.HEART_BEAT.getCode(), JSON.toJSONBytes(heartBeatDTO));
                     channel.writeAndFlush(tcpMsg);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);

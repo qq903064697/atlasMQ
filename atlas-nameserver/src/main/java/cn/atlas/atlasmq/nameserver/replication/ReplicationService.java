@@ -20,21 +20,24 @@ import cn.atlas.atlasmq.nameserver.common.CommonCache;
 import cn.atlas.atlasmq.nameserver.common.MasterSlaveReplicationProperties;
 import cn.atlas.atlasmq.nameserver.common.NameserverProperties;
 import cn.atlas.atlasmq.nameserver.enums.ReplicationModeEnum;
-import cn.atlas.atlasmq.nameserver.event.EventBus;
+import cn.atlas.atlasmq.common.event.EventBus;
 import cn.atlas.atlasmq.nameserver.handler.MasterReplicationServerHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @Author xiaoxin
  * @Description 集群复制服务
  */
 public class ReplicationService {
+    private final Logger logger = LoggerFactory.getLogger(ReplicationService.class);
 
     //参数的校验
     public ReplicationModeEnum checkProperties() {
         NameserverProperties nameserverProperties = CommonCache.getNameserverProperties();
         String mode = nameserverProperties.getReplicationMode();
         if (StringUtil.isNullOrEmpty(mode)) {
-            System.out.println("执行单机模式");
+            logger.info("执行单机模式");
             return null;
         }
         //为空，参数不合法，抛异常
@@ -128,13 +131,13 @@ public class ReplicationService {
                 try {
                     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                         clientGroup.shutdownGracefully();
-                        System.out.println("nameserver's replication connect application is closed");
+                        logger.info("nameserver's replication connect application is closed");
                     }));
                     String[] addr = address.split(":");
                     channelFuture = bootstrap.connect(addr[0], Integer.parseInt(addr[1])).sync();
                     //连接了master节点的channel对象，建议保存
                     channel = channelFuture.channel();
-                    System.out.println("success connected to nameserver replication!");
+                    logger.info("success connected to nameserver replication!");
                     CommonCache.setConnectNodeChannel(channel);
                     channel.closeFuture().sync();
                 } catch (InterruptedException e) {
@@ -174,7 +177,7 @@ public class ReplicationService {
                 Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                     bossGroup.shutdownGracefully();
                     workerGroup.shutdownGracefully();
-                    System.out.println("nameserver's replication application is closed");
+                    logger.info("nameserver's replication application is closed");
                 }));
                 ChannelFuture channelFuture = null;
                 try {
@@ -184,7 +187,7 @@ public class ReplicationService {
                     //trace架构
                     //又要接收外界数据，又要复制数据给外界
                     channelFuture = bootstrap.bind(port).sync();
-                    System.out.println("start nameserver's replication application on port:" + port);
+                    logger.info("start nameserver's replication application on port:{}", port);
                     //阻塞代码
                     channelFuture.channel().closeFuture().sync();
                 } catch (Exception e) {

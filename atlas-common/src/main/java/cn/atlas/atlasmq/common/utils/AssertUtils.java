@@ -1,5 +1,7 @@
 package cn.atlas.atlasmq.common.utils;
 
+import java.util.List;
+
 /**
  * @Author xiaoxin
  * @Description 断言工具
@@ -21,6 +23,12 @@ public class AssertUtils {
 
     public static void isTrue(Boolean condition, String msg) {
         if (!condition) {
+            throw new RuntimeException(msg);
+        }
+    }
+
+    public static void isNotEmpty(List list, String msg) {
+        if (list == null || list.isEmpty()) {
             throw new RuntimeException(msg);
         }
     }

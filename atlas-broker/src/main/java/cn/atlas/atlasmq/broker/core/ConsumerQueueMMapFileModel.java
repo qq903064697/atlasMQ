@@ -7,6 +7,9 @@ import cn.atlas.atlasmq.broker.model.QueueModel;
 import cn.atlas.atlasmq.broker.utils.LogFileNameUtil;
 import cn.atlas.atlasmq.broker.utils.PutMessageLock;
 import cn.atlas.atlasmq.broker.utils.UnfairReentrantLock;
+import cn.atlas.atlasmq.nameserver.event.spi.listener.HeartBeatListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -15,6 +18,7 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -23,6 +27,9 @@ import java.util.List;
  * @Description 对consumerQueue文件做mmap映射的核心对象
  */
 public class ConsumerQueueMMapFileModel {
+
+    private static final Logger logger = LoggerFactory.getLogger(ConsumerQueueMMapFileModel.class);
+
     private File file;
     private MappedByteBuffer mappedByteBuffer;
     private ByteBuffer readBuffer;
@@ -101,16 +108,23 @@ public class ConsumerQueueMMapFileModel {
         return content;
 
     }
-
-    public byte[] readContent(int pos, int size) {
-        readBuffer.position(pos);
-        byte[] content = new byte[size];
-        for (int i = 0; i < size; i++) {
-            // 这里是从内存空间读取数据
-            byte b = readBuffer.get(pos + i);
-            content[i] = b;
+    /**
+     * 读取consumerqueue数据内容
+     *
+     * @param pos      消息读取开始位置
+     * @param msgCount 消息条数
+     * @return
+     */
+    public List<byte[]> readContent(int pos, int msgCount) {
+        ByteBuffer readBuf = readBuffer.slice();
+        readBuf.position(pos);
+        List<byte[]> loadContentList = new ArrayList<>();
+        for (int i = 0; i < msgCount; i++) {
+            byte[] content = new byte[BrokerConstants.CONSUMER_QUEUE_EACH_MSG_SIZE];
+            readBuf.get(content);
+            loadContentList.add(content);
         }
-        return content;
+        return loadContentList;
     }
 
     /**
@@ -146,7 +160,7 @@ public class ConsumerQueueMMapFileModel {
         File file = new File(filePath);
         try {
             file.createNewFile();
-            System.out.println("创建新的consumerquque文件");
+            logger.info("创建了新的consumerQueue文件");
         } catch (IOException e) {}
         return filePath;
     };

@@ -9,26 +9,32 @@ import java.util.Map;
  * @Description 服务实例
  */
 public class ServiceInstance {
-    private String brokerIp;
-    private Integer brokerPort;
+    /**
+     * 注册类型
+     *
+     * @see cn.atlas.atlasmq.common.enums.RegistryTypeEnum
+     */
+    private String registryType;
+    private String ip;
+    private Integer port;
     private Long firstRegistryTime;
     private Long lastHeartBeatTime;
-    private Map<String,String> attrs = new HashMap<>();
+    private Map<String, Object> attrs = new HashMap<>();
 
-    public String getBrokerIp() {
-        return brokerIp;
+    public Integer getPort() {
+        return port;
     }
 
-    public void setBrokerIp(String brokerIp) {
-        this.brokerIp = brokerIp;
+    public void setPort(Integer port) {
+        this.port = port;
     }
 
-    public Integer getBrokerPort() {
-        return brokerPort;
+    public String getIp() {
+        return ip;
     }
 
-    public void setBrokerPort(Integer brokerPort) {
-        this.brokerPort = brokerPort;
+    public void setIp(String ip) {
+        this.ip = ip;
     }
 
     public Long getFirstRegistryTime() {
@@ -47,11 +53,19 @@ public class ServiceInstance {
         this.lastHeartBeatTime = lastHeartBeatTime;
     }
 
-    public Map<String, String> getAttrs() {
+    public Map<String, Object> getAttrs() {
         return attrs;
     }
 
-    public void setAttrs(Map<String, String> attrs) {
+    public void setAttrs(Map<String, Object> attrs) {
         this.attrs = attrs;
+    }
+
+    public String getRegistryType() {
+        return registryType;
+    }
+
+    public void setRegistryType(String registryType) {
+        this.registryType = registryType;
     }
 }

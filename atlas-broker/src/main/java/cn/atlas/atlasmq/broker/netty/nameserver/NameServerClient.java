@@ -5,10 +5,11 @@ import cn.atlas.atlasmq.broker.config.GlobalProperties;
 import cn.atlas.atlasmq.common.coder.TcpMsg;
 import cn.atlas.atlasmq.common.coder.TcpMsgDecoder;
 import cn.atlas.atlasmq.common.coder.TcpMsgEncoder;
-import cn.atlas.atlasmq.common.constants.NameServerConstants;
-import cn.atlas.atlasmq.common.dto.RegistryDTO;
+import cn.atlas.atlasmq.common.dto.ServiceRegistryReqDTO;
+import cn.atlas.atlasmq.common.dto.ServiceRegistryRespDTO;
 import cn.atlas.atlasmq.common.enums.NameServerEventCode;
 import cn.atlas.atlasmq.common.enums.NameServerResponseCode;
+import cn.atlas.atlasmq.common.enums.RegistryTypeEnum;
 import com.alibaba.fastjson.JSON;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -19,9 +20,13 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.internal.StringUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @Author xiaoxin
@@ -29,6 +34,11 @@ import java.net.UnknownHostException;
  * @Description: 负责与nameserver服务端创建长连接，支持连接创建，支持重试机制
  */
 public class NameServerClient {
+
+    private static final Logger logger = LoggerFactory.getLogger(NameServerClient.class);
+
+
+
     private EventLoopGroup clientGroup = new NioEventLoopGroup();
     private Bootstrap bootstrap = new Bootstrap();
     private Channel channel;
@@ -58,7 +68,7 @@ public class NameServerClient {
             TcpMsg tcpMsg = new TcpMsg(NameServerResponseCode.UN_REGISTRY_SERVICE.getCode(), new byte[]{});
             channel.writeAndFlush(tcpMsg);
             clientGroup.shutdownGracefully();
-            System.out.println("nameserver client is closed");
+            logger.info("nameserver client is closed");
         }));
         try {
             channelFuture = bootstrap.connect(
@@ -66,7 +76,7 @@ public class NameServerClient {
                     nameserverPort
             ).sync();
             channel = channelFuture.channel();
-            System.out.println("success connected to nameserver!");
+            logger.info("success connected to nameserver!");
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -83,18 +93,25 @@ public class NameServerClient {
     }
 
     public void sendRegistryMsg() {
-        RegistryDTO registryDTO = new RegistryDTO();
+        ServiceRegistryReqDTO registryDTO = new ServiceRegistryReqDTO();
         try {
-            registryDTO.setBrokerIp(Inet4Address.getLocalHost().getHostAddress());
+            Map<String, Object> attrs = new HashMap<>();
+            //todo 先写死
+            attrs.put("role", "single");
+            // broker是主从架构，producer（向主发送数据），consumer（主、从拉数据）
+//            registryDTO.setIp(Inet4Address.getLocalHost().getHostAddress());
+            registryDTO.setIp("127.0.0.1");
             GlobalProperties globalProperties = CommonCache.getGlobalProperties();
-            registryDTO.setBrokerPort(globalProperties.getBrokerPort());
+            registryDTO.setPort(globalProperties.getBrokerPort());
             registryDTO.setUser(globalProperties.getNameserverUser());
             registryDTO.setPassword(globalProperties.getNameserverPassword());
+            registryDTO.setRegistryType(RegistryTypeEnum.BROKER.getCode());
+            registryDTO.setAttrs(attrs);
             byte[] body = JSON.toJSONBytes(registryDTO);
             TcpMsg tcpMsg = new TcpMsg(NameServerEventCode.REGISTRY.getCode(), body);
             channel.writeAndFlush(tcpMsg);
-            System.out.println("发送注册事件");
-        } catch (UnknownHostException e) {
+            logger.info("发送注册事件");
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
 

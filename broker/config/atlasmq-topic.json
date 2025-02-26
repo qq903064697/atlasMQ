@@ -2,7 +2,7 @@
 	{
 		"commitLogModel":{
 			"fileName":"00000000",
-			"offset":3368,
+			"offset":874,
 			"offsetLimit":1048576
 		},
 		"createAt":1701918231281,
@@ -11,7 +11,7 @@
 				"fileName":"00000000",
 				"id":0,
 				"lastOffset":0,
-				"latestOffset":3876,
+				"latestOffset":456,
 				"offsetLimit":6291456
 			},
 			{

@@ -2,8 +2,8 @@ package cn.atlas.atlasmq.nameserver.handler;
 
 import cn.atlas.atlasmq.common.coder.TcpMsg;
 import cn.atlas.atlasmq.common.enums.NameServerEventCode;
-import cn.atlas.atlasmq.nameserver.event.EventBus;
-import cn.atlas.atlasmq.nameserver.event.model.Event;
+import cn.atlas.atlasmq.common.event.EventBus;
+import cn.atlas.atlasmq.common.event.model.Event;
 import cn.atlas.atlasmq.nameserver.event.model.SlaveHeartBeatEvent;
 import cn.atlas.atlasmq.nameserver.event.model.SlaveReplicationMsgAckEvent;
 import cn.atlas.atlasmq.nameserver.event.model.StartReplicationEvent;

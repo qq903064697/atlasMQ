@@ -1,12 +1,10 @@
 package cn.atlas.atlasmq.broker.core;
 
 import cn.atlas.atlasmq.broker.cache.CommonCache;
-import cn.atlas.atlasmq.broker.model.AtlasMqTopicModel;
-import cn.atlas.atlasmq.broker.model.ConsumerQueueDetailModel;
-import cn.atlas.atlasmq.broker.model.ConsumerQueueOffsetModel;
-import cn.atlas.atlasmq.broker.model.QueueModel;
+import cn.atlas.atlasmq.broker.model.*;
 import com.alibaba.fastjson.JSON;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,10 +17,11 @@ import java.util.Map;
 public class ConsumerQueueConsumeHandler {
 
     /**
-     * 读取当前最新一条ConsumerQueue的消息内容
+     * 读取当前最新N条consumeQueue的消息内容,并且返回commitLog原始数据
      * @return
      */
-    public byte[] consume(String topic, String consumerGroup, Integer queueId) {
+    public List<byte[]> consume(ConsumerQueueConsumeReqModel consumerQueueConsumeReqModel) {
+        String topic = consumerQueueConsumeReqModel.getTopic();
         // 1.检查参数合法性
         // 2.获取当前匹配的队列的最新的consumerQueue的offset是多少
         // 3.获取当前匹配的队列存储文件的mmap对象，然后读取offset地址的数据
@@ -30,6 +29,9 @@ public class ConsumerQueueConsumeHandler {
         if (atlasMqTopicModel == null) {
             throw new RuntimeException("topic" + topic + " is undefined");
         }
+        String consumerGroup = consumerQueueConsumeReqModel.getConsumerGroup();
+        Integer queueId = consumerQueueConsumeReqModel.getQueueId();
+        Integer batchSize = consumerQueueConsumeReqModel.getBatchSize();
         ConsumerQueueOffsetModel.OffsetTable offsetTable = CommonCache.getConsumerQueueOffsetModel().getOffsetTable();
         Map<String, ConsumerQueueOffsetModel.ConsumerGroupDetail> consumerGroupDetailMap = offsetTable.getTopicConsumerGroupDetail();
         ConsumerQueueOffsetModel.ConsumerGroupDetail consumerGroupDetail = consumerGroupDetailMap.get(topic);
@@ -61,13 +63,17 @@ public class ConsumerQueueConsumeHandler {
 
         List<ConsumerQueueMMapFileModel> consumerQueueMMapFileModelList = CommonCache.getConsumerQueueMMapFileModelManager().get(topic);
         ConsumerQueueMMapFileModel consumerQueueMMapFileModel = consumerQueueMMapFileModelList.get(queueId);
-
-        byte[] content = consumerQueueMMapFileModel.readContent(consumerQueueOffset);
-        ConsumerQueueDetailModel consumerQueueDetailModel = new ConsumerQueueDetailModel();
-        consumerQueueDetailModel.buildFromBytes(content);
-
-        CommitLogMMapFileModel commitLogMMapFileModel = CommonCache.getCommitLogMMapFileModelManager().get(topic);
-        return commitLogMMapFileModel.readContent(consumerQueueDetailModel.getMsgIndex(), consumerQueueDetailModel.getMsgLength());
+        // 一次读取多条从consumerQueue的消息
+        List<byte[]> consumerQueueContentList = consumerQueueMMapFileModel.readContent(consumerQueueOffset, batchSize);
+        List<byte[]> commitLogBodyContentList = new ArrayList<>();
+        for (byte[] content : consumerQueueContentList) {
+            ConsumerQueueDetailModel consumerQueueDetailModel = new ConsumerQueueDetailModel();
+            consumerQueueDetailModel.buildFromBytes(content);
+            CommitLogMMapFileModel commitLogMMapFileModel = CommonCache.getCommitLogMMapFileModelManager().get(topic);
+            byte[] commitLogContent = commitLogMMapFileModel.readContent(consumerQueueDetailModel.getMsgIndex(), consumerQueueDetailModel.getMsgLength());
+            commitLogBodyContentList.add(commitLogContent);
+        }
+        return commitLogBodyContentList;
     }
 
     /**

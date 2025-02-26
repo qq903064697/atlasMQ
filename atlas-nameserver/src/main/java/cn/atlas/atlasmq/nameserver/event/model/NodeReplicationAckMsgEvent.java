@@ -1,11 +1,13 @@
 package cn.atlas.atlasmq.nameserver.event.model;
 
+import cn.atlas.atlasmq.common.event.model.Event;
+
 /**
  * @Author xiaoxin
  * @Create 2025/2/23 下午10:21
  * @Version 1.0
  */
-public class NodeReplicationAckMsgEvent extends Event{
+public class NodeReplicationAckMsgEvent extends Event {
     private Integer type;
 
     private String nodeIp;

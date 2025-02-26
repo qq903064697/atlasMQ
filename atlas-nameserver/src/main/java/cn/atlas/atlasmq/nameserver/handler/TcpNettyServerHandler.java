@@ -1,16 +1,20 @@
 package cn.atlas.atlasmq.nameserver.handler;
 
 import cn.atlas.atlasmq.common.coder.TcpMsg;
+import cn.atlas.atlasmq.common.dto.HeartBeatDTO;
+import cn.atlas.atlasmq.common.dto.PullBrokerIpDTO;
+import cn.atlas.atlasmq.common.dto.ServiceRegistryReqDTO;
 import cn.atlas.atlasmq.common.enums.NameServerEventCode;
-import cn.atlas.atlasmq.nameserver.event.EventBus;
-import cn.atlas.atlasmq.nameserver.event.model.Event;
-import cn.atlas.atlasmq.nameserver.event.model.HeartBeatEvent;
-import cn.atlas.atlasmq.nameserver.event.model.RegistryEvent;
-import cn.atlas.atlasmq.nameserver.event.model.UnRegistryEvent;
+import cn.atlas.atlasmq.common.event.EventBus;
+import cn.atlas.atlasmq.common.event.model.Event;
+import cn.atlas.atlasmq.nameserver.event.model.*;
 import com.alibaba.fastjson.JSON;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.util.internal.StringUtil;
+
+import java.net.InetSocketAddress;
 
 /**
  * @Author xiaoxin
@@ -43,10 +47,38 @@ public class TcpNettyServerHandler extends SimpleChannelInboundHandler {
         Event event = null;
         if (NameServerEventCode.REGISTRY.getCode() == code) {
             // 注册事件
-            event = JSON.parseObject(body, RegistryEvent.class);
+            ServiceRegistryReqDTO serviceRegistryReqDTO = JSON.parseObject(body, ServiceRegistryReqDTO.class);
+            RegistryEvent registryEvent = new RegistryEvent();
+            registryEvent.setMsgId(serviceRegistryReqDTO.getMsgId());
+            registryEvent.setRegistryType(serviceRegistryReqDTO.getRegistryType());
+            registryEvent.setPassword(serviceRegistryReqDTO.getPassword());
+            registryEvent.setUser(serviceRegistryReqDTO.getUser());
+            registryEvent.setAttrs(serviceRegistryReqDTO.getAttrs());
+            registryEvent.setRegistryType(serviceRegistryReqDTO.getRegistryType());
+            if(StringUtil.isNullOrEmpty(serviceRegistryReqDTO.getIp())) {
+                InetSocketAddress inetSocketAddress = (InetSocketAddress) channelHandlerContext.channel().remoteAddress();
+//            registryEvent.setIp(inetSocketAddress.getHostString());
+                registryEvent.setIp("127.0.0.1");
+                registryEvent.setPort(inetSocketAddress.getPort());
+            } else {
+                registryEvent.setIp(serviceRegistryReqDTO.getIp());
+                registryEvent.setPort(serviceRegistryReqDTO.getPort());
+            }
+            event = registryEvent;
         }  else if (NameServerEventCode.HEART_BEAT.getCode() == code) {
             // 心跳事件
-            event = new HeartBeatEvent();
+            HeartBeatDTO heartBeatDTO = JSON.parseObject(body, HeartBeatDTO.class);
+            HeartBeatEvent heartBeatEvent = new HeartBeatEvent();
+            heartBeatEvent.setMsgId(heartBeatDTO.getMsgId());
+
+            event = heartBeatEvent;
+        } else if (NameServerEventCode.PULL_BROKER_IP_LIST.getCode() == code) {
+            // 拉取broker节点ip地址
+            PullBrokerIpDTO pullBrokerIpDTO = JSON.parseObject(body, PullBrokerIpDTO.class);
+            PullBrokerIpEvent pullBrokerIpEvent = new PullBrokerIpEvent();
+            pullBrokerIpEvent.setRole(pullBrokerIpDTO.getRole());
+            pullBrokerIpEvent.setMsgId(pullBrokerIpDTO.getMsgId());
+            event = pullBrokerIpEvent;
         }
         event.setChannelHandlerContext(channelHandlerContext);
         eventBus.publish(event);

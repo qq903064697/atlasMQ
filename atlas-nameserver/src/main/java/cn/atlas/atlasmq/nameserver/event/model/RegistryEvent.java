@@ -1,5 +1,10 @@
 package cn.atlas.atlasmq.nameserver.event.model;
 
+import cn.atlas.atlasmq.common.event.model.Event;
+
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @Author xiaoxin
  * @Version 1.0
@@ -7,25 +12,43 @@ package cn.atlas.atlasmq.nameserver.event.model;
  */
 public class RegistryEvent extends Event {
 
+    private String registryType;
     private String user;
     private String password;
-    private String brokerIp;
-    private Integer brokerPort;
+    private String ip;
+    private Integer port;
+    private Map<String,Object> attrs = new HashMap<>();
 
-    public String getBrokerIp() {
-        return brokerIp;
+    public Map<String, Object> getAttrs() {
+        return attrs;
     }
 
-    public void setBrokerIp(String brokerIp) {
-        this.brokerIp = brokerIp;
+    public void setAttrs(Map<String, Object> attrs) {
+        this.attrs = attrs;
     }
 
-    public Integer getBrokerPort() {
-        return brokerPort;
+    public String getRegistryType() {
+        return registryType;
     }
 
-    public void setBrokerPort(Integer brokerPort) {
-        this.brokerPort = brokerPort;
+    public void setRegistryType(String registryType) {
+        this.registryType = registryType;
+    }
+
+    public String getIp() {
+        return ip;
+    }
+
+    public void setIp(String ip) {
+        this.ip = ip;
+    }
+
+    public Integer getPort() {
+        return port;
+    }
+
+    public void setPort(Integer port) {
+        this.port = port;
     }
 
     public String getUser() {
@@ -44,13 +67,5 @@ public class RegistryEvent extends Event {
         this.password = password;
     }
 
-    @Override
-    public String toString() {
-        return "RegistryEvent{" +
-                "user='" + user + '\'' +
-                ", password='" + password + '\'' +
-                ", brokerIp='" + brokerIp + '\'' +
-                ", brokerPort=" + brokerPort +
-                '}';
-    }
+
 }

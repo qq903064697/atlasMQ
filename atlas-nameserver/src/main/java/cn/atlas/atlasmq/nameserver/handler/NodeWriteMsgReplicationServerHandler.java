@@ -2,8 +2,9 @@ package cn.atlas.atlasmq.nameserver.handler;
 
 import cn.atlas.atlasmq.common.coder.TcpMsg;
 import cn.atlas.atlasmq.common.enums.NameServerEventCode;
+import cn.atlas.atlasmq.common.event.model.Event;
 import cn.atlas.atlasmq.nameserver.common.CommonCache;
-import cn.atlas.atlasmq.nameserver.event.EventBus;
+import cn.atlas.atlasmq.common.event.EventBus;
 import cn.atlas.atlasmq.nameserver.event.model.*;
 import com.alibaba.fastjson2.JSON;
 import io.netty.channel.ChannelHandler;

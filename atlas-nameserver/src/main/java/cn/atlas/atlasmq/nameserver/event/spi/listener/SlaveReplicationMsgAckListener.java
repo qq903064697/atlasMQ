@@ -3,17 +3,16 @@ package cn.atlas.atlasmq.nameserver.event.spi.listener;
 import cn.atlas.atlasmq.common.coder.TcpMsg;
 import cn.atlas.atlasmq.common.dto.SlaveAckDTO;
 import cn.atlas.atlasmq.common.enums.NameServerResponseCode;
+import cn.atlas.atlasmq.common.event.Listener;
 import cn.atlas.atlasmq.nameserver.common.CommonCache;
 import cn.atlas.atlasmq.nameserver.event.model.SlaveReplicationMsgAckEvent;
-
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @Author xiaoxin
  * @Version 1.0
  * @Description: 主节点接收从节点同步ack信号处理器
  */
-public class SlaveReplicationMsgAckEventListener implements Listener<SlaveReplicationMsgAckEvent> {
+public class SlaveReplicationMsgAckListener implements Listener<SlaveReplicationMsgAckEvent> {
     @Override
     public void onReceive(SlaveReplicationMsgAckEvent event) throws Exception {
         String slaveAckMsgId = event.getMsgId();

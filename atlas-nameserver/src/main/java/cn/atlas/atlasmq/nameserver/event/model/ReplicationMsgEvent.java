@@ -1,12 +1,13 @@
 package cn.atlas.atlasmq.nameserver.event.model;
 
+import cn.atlas.atlasmq.common.event.model.Event;
 import cn.atlas.atlasmq.nameserver.store.ServiceInstance;
 
 /**
  * @Author idea
  * @Description 复制消息
  */
-public class ReplicationMsgEvent extends Event{
+public class ReplicationMsgEvent extends Event {
     private Integer type;
 
     private ServiceInstance serviceInstance;

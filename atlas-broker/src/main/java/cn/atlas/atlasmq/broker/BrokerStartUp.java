@@ -8,7 +8,9 @@ import cn.atlas.atlasmq.broker.core.CommitLogAppendHandler;
 import cn.atlas.atlasmq.broker.core.ConsumerQueueAppendHandler;
 import cn.atlas.atlasmq.broker.core.ConsumerQueueConsumeHandler;
 import cn.atlas.atlasmq.broker.model.AtlasMqTopicModel;
+import cn.atlas.atlasmq.broker.netty.broker.BrokerServer;
 import cn.atlas.atlasmq.broker.netty.nameserver.NameServerClient;
+import cn.atlas.atlasmq.broker.rebalance.ConsumerInstancePool;
 
 import java.io.IOException;
 import java.util.List;
@@ -51,6 +53,8 @@ public class BrokerStartUp {
             commitLogAppendHandler.prepareMMapLoading(topicName);
             consumerQueueAppendHandler.prepareConsumerQueueMMapLoading(topicName);
         }
+        CommonCache.setConsumerQueueConsumeHandler(consumerQueueConsumeHandler);
+        CommonCache.setCommitLogAppendHandler(commitLogAppendHandler);
     }
 
     /**
@@ -60,15 +64,24 @@ public class BrokerStartUp {
         CommonCache.getNameServerClient().initConnection();
         CommonCache.getNameServerClient().sendRegistryMsg();
 
-
+    }
+    private static void initBrokerServer() throws InterruptedException {
+        BrokerServer brokerServer = new BrokerServer(CommonCache.getGlobalProperties().getBrokerPort());
+        brokerServer.startServer();
+    }
+    //开启重平衡任务
+    private static void initReBalanceJob() {
+        CommonCache.getConsumerInstancePool().startReBalanceJob();
     }
 
-    public static void main(String[] args) throws IOException {
+
+    public static void main(String[] args) throws IOException, InterruptedException {
         // 加载配置，缓存对象的生成
         initProperties();
-
-        //
         initNameServerChannel();
+        initReBalanceJob();
+        //这个函数是会阻塞的
+        initBrokerServer();
 
 //        // 模拟初始化文件映射
 //        String topic = "order_cancel_topic";

@@ -3,15 +3,14 @@ package cn.atlas.atlasmq.nameserver.event.spi.listener;
 import cn.atlas.atlasmq.common.coder.TcpMsg;
 import cn.atlas.atlasmq.common.enums.NameServerEventCode;
 import cn.atlas.atlasmq.common.enums.NameServerResponseCode;
+import cn.atlas.atlasmq.common.event.Listener;
 import cn.atlas.atlasmq.nameserver.common.CommonCache;
 import cn.atlas.atlasmq.nameserver.event.model.StartReplicationEvent;
 import cn.atlas.atlasmq.nameserver.utils.NameserverUtils;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.AttributeKey;
 
-import java.net.Inet4Address;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 
 /**
  * @Author xiaoxin

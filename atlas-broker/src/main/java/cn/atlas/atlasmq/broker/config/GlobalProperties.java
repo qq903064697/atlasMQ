@@ -13,6 +13,7 @@ public class GlobalProperties {
     private String nameserverUser;
     private String nameserverPassword;
     private Integer brokerPort;
+    private String reBalanceStrategy;
 
     /**
      * 读取环境变量中配置的mq存储绝对路径地址
@@ -65,5 +66,13 @@ public class GlobalProperties {
 
     public void setBrokerPort(Integer brokerPort) {
         this.brokerPort = brokerPort;
+    }
+
+    public String getReBalanceStrategy() {
+        return reBalanceStrategy;
+    }
+
+    public void setReBalanceStrategy(String reBalanceStrategy) {
+        this.reBalanceStrategy = reBalanceStrategy;
     }
 }

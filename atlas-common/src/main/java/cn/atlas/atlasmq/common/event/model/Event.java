@@ -1,4 +1,4 @@
-package cn.atlas.atlasmq.nameserver.event.model;
+package cn.atlas.atlasmq.common.event.model;
 
 import io.netty.channel.ChannelHandlerContext;
 

@@ -3,6 +3,7 @@ package cn.atlas.atlasmq.broker.core;
 import cn.atlas.atlasmq.broker.cache.CommonCache;
 import cn.atlas.atlasmq.common.constants.BrokerConstants;
 import cn.atlas.atlasmq.broker.model.CommitLogMessageModel;
+import cn.atlas.atlasmq.common.dto.MessageDTO;
 
 import java.io.IOException;
 
@@ -19,15 +20,12 @@ public class CommitLogAppendHandler {
         CommonCache.getCommitLogMMapFileModelManager().put(topicName, commitLogMMapFileModel);
     }
 
-    public void appendMessage(String topic, byte[] content) throws IOException {
-        CommitLogMMapFileModel commitLogMMapFileModel = CommonCache.getCommitLogMMapFileModelManager().get(topic);
+    public void appendMessage(MessageDTO messageDTO) throws IOException {
+        CommitLogMMapFileModel commitLogMMapFileModel = CommonCache.getCommitLogMMapFileModelManager().get(messageDTO.getTopic());
         if (commitLogMMapFileModel == null) {
             throw  new RuntimeException("topic is invalid");
         }
-        CommitLogMessageModel commitLogMessageModel = new CommitLogMessageModel();
-//        commitLogMessageModel.setSize(content.length);
-        commitLogMessageModel.setContent(content);
-        commitLogMMapFileModel.writeContent(commitLogMessageModel);
+        commitLogMMapFileModel.writeContent(messageDTO, true);
     }
 
 
