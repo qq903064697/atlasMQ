@@ -16,12 +16,30 @@ public class LogFileNameUtil {
     public static String buildFirstCommitLogFileName() {
         return "00000000";
     }
+    /**
+     * 构建第一份consumerQueue文件名称
+     * @return
+     */
+    public static String buildFirstConsumerQueueFileName() {
+        return "00000000";
+    }
     public static String buildCommitLogFilePath(String topicName, String commitLogFileName) {
         return CommonCache.getGlobalProperties().getAtlasMqHome()
                 + BrokerConstants.BASE_COMMIT_LOG_PATH
                 + topicName
                 + BrokerConstants.SPLIT
                 + commitLogFileName;
+    }
+
+    /**
+     * 构建commitLog所在目录的基本路径
+     * @param topicName
+     * @return
+     */
+    public static String buildCommitLogBasePath(String topicName) {
+        return CommonCache.getGlobalProperties().getAtlasMqHome()
+                + BrokerConstants.BASE_COMMIT_LOG_PATH
+                + topicName;
     }
 
     /**
@@ -39,6 +57,16 @@ public class LogFileNameUtil {
                 + queueId
                 + BrokerConstants.SPLIT
                 + consumerQueueFileName;
+    }
+    /**
+     * 构建consumerQueuej基本路径
+     * @param topicName
+     * @return
+     */
+    public static String buildConsumerQueueBasePath(String topicName) {
+        return CommonCache.getGlobalProperties().getAtlasMqHome()
+                + BrokerConstants.BASE_CONSUMER_QUEUE_PATH
+                + topicName;
     }
 
     public static String incrementCommitLogFileName(String oldFileName) {

@@ -33,6 +33,15 @@ public class CommonCache {
     private static Map<String,Map<String,List<ConsumerInstance>>> consumerHoldMap = new ConcurrentHashMap<>();
     private static ConsumerInstancePool consumerInstancePool = new ConsumerInstancePool();
     private static ConsumerQueueConsumeHandler consumerQueueConsumeHandler;
+    private static ConsumerQueueAppendHandler consumerQueueAppendHandler;
+
+    public static ConsumerQueueAppendHandler getConsumerQueueAppendHandler() {
+        return consumerQueueAppendHandler;
+    }
+
+    public static void setConsumerQueueAppendHandler(ConsumerQueueAppendHandler consumerQueueAppendHandler) {
+        CommonCache.consumerQueueAppendHandler = consumerQueueAppendHandler;
+    }
 
     public static ConsumerQueueConsumeHandler getConsumerQueueConsumeHandler() {
         return consumerQueueConsumeHandler;

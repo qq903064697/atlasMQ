@@ -2,10 +2,12 @@ package cn.atlas.atlasmq.broker.netty.broker;
 
 import cn.atlas.atlasmq.broker.event.model.ConsumeMsgAckEvent;
 import cn.atlas.atlasmq.broker.event.model.ConsumerMsgEvent;
+import cn.atlas.atlasmq.broker.event.model.CreateTopicEvent;
 import cn.atlas.atlasmq.broker.event.model.PushMsgEvent;
 import cn.atlas.atlasmq.common.coder.TcpMsg;
 import cn.atlas.atlasmq.common.dto.ConsumeMsgAckReqDTO;
 import cn.atlas.atlasmq.common.dto.ConsumerMsgReqDTO;
+import cn.atlas.atlasmq.common.dto.CreateTopicReqDTO;
 import cn.atlas.atlasmq.common.dto.MessageDTO;
 import cn.atlas.atlasmq.common.enums.BrokerEventCode;
 import cn.atlas.atlasmq.common.event.model.Event;
@@ -64,6 +66,11 @@ public class BrokerServerHandler extends SimpleChannelInboundHandler {
             consumeMsgAckEvent.setConsumeMsgAckReqDTO(consumeMsgAckReqDTO);
             consumeMsgAckEvent.setMsgId(consumeMsgAckReqDTO.getMsgId());
             event = consumeMsgAckEvent;
+        }  else if (BrokerEventCode.CREATE_TOPIC.getCode() == code) {
+            CreateTopicReqDTO createTopicReqDTO = JSON.parseObject(body, CreateTopicReqDTO.class);
+            CreateTopicEvent createTopicEvent= new CreateTopicEvent();
+            createTopicEvent.setCreateTopicReqDTO(createTopicReqDTO);
+            event = createTopicEvent;
         }
         event.setChannelHandlerContext(channelHandlerContext);
         eventBus.publish(event);
